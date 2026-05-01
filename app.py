@@ -5,8 +5,8 @@ from datetime import datetime
 app = Flask(__name__)
 
 # ================= [설정 구역] =================
-REST_API_KEY = '168466c7fc817cdaa624d8d743054b4d' 
-SERVICE_KEY = '04c962ef8ad36d2e639dd73ce8774a570cfb2e0ae8f243022b01a670faf440fa'
+REST_API_KEY = os.environ.get('KAKAO_KEY')
+SERVICE_KEY = os.environ.get('WEATHER_KEY')
 REDIRECT_URI = 'https://weather-bot-sage.vercel.app/callback'
 # ==============================================
 

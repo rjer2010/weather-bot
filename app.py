@@ -37,11 +37,18 @@ def preprocess_minyoung_logic(temp, humidity, rain):
         
     return status, advice, color
 
+# app.py 상단 수정
+# ... (생략) ...
 @app.route('/')
 def index():
-    REDIRECT_URI = f"https://{request.host}/callback"
-    kakao_auth_url = f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={REDIRECT_URI}&response_type=code"
-    return f'''
+    # 주소를 직접 적어주는 것이 가장 확실합니다.
+    actual_host = "weather-e96931yx6-rjer2010s-projects.vercel.app" 
+    REDIRECT_URI = f"https://{actual_host}/callback"
+    
+    # 키가 제대로 로드되었는지 확인하는 방어 코드
+    if not REST_API_KEY:
+        return "<h2>에러: KAKAO_KEY가 Vercel 설정에 없습니다!</h2>"
+# ... (생략) ...
         <div style="text-align: center; margin-top: 50px; font-family: sans-serif;">
             <h1 style="color: #333;">☀️ 미녕예보 AI 웹사이트</h1>
             <p style="color: #666;">Colab '레전드' 모델이 실시간으로 날씨를 분석합니다.</p>

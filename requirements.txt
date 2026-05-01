@@ -1,6 +1,2 @@
 Flask
 requests
-pandas
-numpy
-# 아래 한 줄을 추가하면 libgomp 에러가 해결됩니다!
-scikit-learn

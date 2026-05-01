@@ -22,10 +22,8 @@ def index():
 
 @app.route('/callback')
 def callback():
-    # 카카오가 로그인 성공 후 보내주는 코드를 받는 곳입니다.
     code = request.args.get('code')
     
-    # 1. 인가 코드로 토큰 받기
     token_url = "https://kauth.kakao.com/oauth/token"
     token_data = {
         "grant_type": "authorization_code",
@@ -35,13 +33,18 @@ def callback():
     }
     token_res = requests.post(token_url, data=token_data).json()
     
-    # 2. 날씨 정보 가져오기 (기존 로직 활용)
-    # (여기서는 간단하게 결과만 출력하는 예시입니다)
+    # 에러 체크 로직 추가
+    if 'access_token' not in token_res:
+        return f"<h2>❌ 토큰 발급 실패</h2><p>이유: {token_res.get('error_description', '알 수 없는 오류')}</p><a href='/'>홈으로 돌아가기</a>"
+
+    # 성공 시 실행
+    access_token = token_res.get('access_token')
     return f'''
         <h2>✅ 로그인 성공!</h2>
-        <p>방금 발급된 액세스 토큰: {token_res.get('access_token')[:20]}...</p>
+        <p>방금 발급된 액세스 토큰: {access_token[:20]}...</p>
         <p>이제 이 토큰을 활용해 실시간 날씨 정보를 화면에 그려줄 수 있습니다!</p>
         <a href="/">홈으로 돌아가기</a>
+    '''
     '''
 
 if __name__ == '__main__':

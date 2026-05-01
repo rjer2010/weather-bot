@@ -1,5 +1,4 @@
-requests
-pytz
 Flask
+requests
 pandas
 numpy

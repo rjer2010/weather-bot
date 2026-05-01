@@ -5,7 +5,7 @@ import json
 app = Flask(__name__)
 
 # [꼭 확인!] 본인의 REST API 키를 여기에 입력하세요
-REST_API_KEY = '본인의_REST_API_키_입력' 
+REST_API_KEY = '168466c7fc817cdaa624d8d743054b4d' 
 REDIRECT_URI = 'http://localhost:5000/callback'
 
 @app.route('/')

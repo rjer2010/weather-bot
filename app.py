@@ -5,7 +5,7 @@ import json
 app = Flask(__name__)
 
 # 설정값 (본인의 것으로 채우세요)
-REST_API_KEY = '내_REST_API_키'
+REST_API_KEY = '168466c7fc817cdaa624d8d743054b4d'
 REDIRECT_URI = 'http://localhost:5000/callback' # 테스트용 주소
 
 @app.route('/')

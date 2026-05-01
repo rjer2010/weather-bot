@@ -5,11 +5,8 @@ from datetime import datetime
 app = Flask(__name__)
 
 # ================= [설정 구역] =================
-# 1. 카카오 REST API 키
 REST_API_KEY = '168466c7fc817cdaa624d8d743054b4d' 
-# 2. 기상청 서비스 키 (Encoding 또는 Decoding 키 중 맞는 것을 사용)
 SERVICE_KEY = '04c962ef8ad36d2e639dd73ce8774a570cfb2e0ae8f243022b01a670faf440fa'
-# 3. 리다이렉트 URI (카카오 설정과 동일해야 함)
 REDIRECT_URI = 'http://localhost:5000/callback'
 # ==============================================
 
@@ -30,42 +27,40 @@ def index():
 
 @app.route('/callback')
 def callback():
-    # 1. 카카오로부터 인가 코드 받기
     code = request.args.get('code')
     if not code:
         return "인가 코드가 없습니다. 다시 시도해주세요."
     
-    # 2. 인가 코드로 액세스 토큰 요청하기
     token_url = "https://kauth.kakao.com/oauth/token"
-    token_data = {{
+    # 중괄호를 하나로 수정했습니다!
+    token_data = {
         "grant_type": "authorization_code",
         "client_id": REST_API_KEY,
         "redirect_uri": REDIRECT_URI,
         "code": code
-    }}
+    }
     
     token_res = requests.post(token_url, data=token_data).json()
     if 'access_token' not in token_res:
         return f"토큰 발급 실패: {token_res.get('error_description', '키 설정을 확인하세요.')}"
 
-    # 3. 기상청 API를 통해 오늘 날씨 가져오기
     weather_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
     base_date = datetime.now().strftime("%Y%m%d")
     
-    weather_params = {{
+    # 중괄호를 하나로 수정했습니다!
+    weather_params = {
         'serviceKey': SERVICE_KEY,
         'dataType': 'JSON',
         'base_date': base_date,
-        'base_time': '0500',  # 새벽 5시 예보 기준
+        'base_time': '0500', 
         'nx': '55', 'ny': '127',
         'numOfRows': 200
-    }}
+    }
 
     try:
         weather_res = requests.get(weather_url, params=weather_params).json()
         items = weather_res['response']['body']['items']['item']
         
-        # HTML 표 만들기
         weather_table = """
         <table border="1" style="margin: 20px auto; border-collapse: collapse; width: 300px; text-align: center;">
             <tr style="background-color: #f2f2f2;">
@@ -75,8 +70,7 @@ def callback():
         """
         
         for item in items:
-            # 오늘 날짜의 기온(TMP) 데이터만 추출
-            if item['fcstDate'] == base_date and item['category'] == 'TMP':
+            if item.get('fcstDate') == base_date and item.get('category') == 'TMP':
                 time = item['fcstTime'][:2] + "시"
                 temp = item['fcstValue']
                 weather_table += f"<tr><td>{time}</td><td>{temp}도</td></tr>"
@@ -84,13 +78,11 @@ def callback():
         weather_table += "</table>"
         
     except Exception as e:
-        weather_table = f"<p style='color:red;'>날씨 데이터를 가져오는 중 오류가 발생했습니다: {e}</p>"
+        weather_table = f"<p style='color:red;'>데이터 처리 중 오류: {e}</p>"
 
-    # 4. 최종 화면 출력
     return f'''
         <div style="text-align: center; font-family: sans-serif; padding: 20px;">
-            <h2 style="color: #2d89ef;">✅ 로그인 및 본인인증 성공!</h2>
-            <p>카카오 계정으로 인증되었습니다.</p>
+            <h2 style="color: #2d89ef;">✅ 로그인 및 날씨 조회 성공!</h2>
             <hr style="width: 50%;">
             {weather_table}
             <br>
@@ -99,5 +91,4 @@ def callback():
     '''
 
 if __name__ == '__main__':
-    # debug=True는 코드 수정 시 자동으로 서버를 재시작해줍니다.
     app.run(port=5000, debug=True)

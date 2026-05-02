@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>미녕예보 AI v2.0</title>
+    <title>미녕예보 AI</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>☀️ 미녕예보 AI</h1>
-            <p>실시간 데이터 분석 시스템</p>
+            <p>데이터 기반 지능형 날씨 분석 v2.0</p>
         </div>
 
         {% if not weather_data %}
-            <div class="login-section">
+            <div class="login-section" style="text-align: center;">
                 <p>오늘의 옷차림, 미녕 AI가 결정해 드릴게요.</p>
                 <a href="{{ auth_url }}" class="login-btn">카카오 로그인으로 확인하기</a>
             </div>
@@ -23,12 +23,19 @@
                 {% for item in weather_data %}
                 <div class="weather-card" style="background-color: {{ item.color }};">
                     <div class="weather-info">
-                        <div class="time">{{ item.time }} 예보</div>
-                        <div class="temp">{{ item.temp }}℃</div>
+                        <div class="time">{{ item.time }}</div>
+                        <div class="temp">{{ item.temp }}°C</div>
                         <div class="status">{{ item.status }}</div>
+                        
+                        <div class="details">
+                            <span>☔ {{ item.rain_prob }}%</span>
+                            <span>💧 {{ item.humidity }}%</span>
+                            <span>💨 {{ item.wind }}m/s</span>
+                        </div>
+                        
                         <div class="advice">{{ item.advice }}</div>
                     </div>
-                    <img src="{{ item.icon }}" class="weather-icon" alt="icon">
+                    <img src="{{ item.icon }}" class="weather-icon" alt="weather icon">
                 </div>
                 {% endfor %}
             </div>

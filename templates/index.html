@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미녕예보 AI v2.0</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>☀️ 미녕예보 AI</h1>
+            <p>실시간 데이터 분석 시스템</p>
+        </div>
+
+        {% if not weather_data %}
+            <div class="login-section">
+                <p>오늘의 옷차림, 미녕 AI가 결정해 드릴게요.</p>
+                <a href="{{ auth_url }}" class="login-btn">카카오 로그인으로 확인하기</a>
+            </div>
+        {% else %}
+            <div class="weather-list">
+                {% for item in weather_data %}
+                <div class="weather-card" style="background-color: {{ item.color }};">
+                    <div class="weather-info">
+                        <div class="time">{{ item.time }} 예보</div>
+                        <div class="temp">{{ item.temp }}℃</div>
+                        <div class="status">{{ item.status }}</div>
+                        <div class="advice">{{ item.advice }}</div>
+                    </div>
+                    <img src="{{ item.icon }}" class="weather-icon" alt="icon">
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

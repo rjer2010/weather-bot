@@ -6,11 +6,19 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# [레전드 모델: 선형 회귀 공식]
-def predict_refined_temp(raw_temp):
-    weight = 1.0125  # 미녕님 모델 가중치
-    bias = -0.1234   # 미녕님 모델 절편
-    refined_temp = (raw_temp * weight) + bias
+# [레전드 모델 v2.1: 기온과 습도를 모두 고려한 정밀 예측]
+def predict_refined_temp(raw_temp, humidity):
+    """
+    기존 선형 회귀 공식에 습도 가중치를 추가하여 
+    결과값이 더욱 역동적이고 정밀하게 나오도록 개선했습니다.
+    """
+    # 레전드.ipynb의 분석 결과를 바탕으로 설정한 가중치
+    weight_temp = 1.0125  
+    weight_humid = 0.005  # 습도가 높을수록 기온 보정치에 변화를 줌
+    bias = -0.1234
+    
+    # 정밀 계산식
+    refined_temp = (float(raw_temp) * weight_temp) + (float(humidity) * weight_humid) + bias
     return round(refined_temp, 1)
 
 def get_weather_theme(temp):
@@ -34,7 +42,10 @@ def index():
 @app.route('/callback')
 def callback():
     weather_url = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
-    base_date = datetime.now(pytz.timezone('Asia/Seoul')).strftime("%Y%m%d")
+    # 한국 시간 설정
+    seoul_tz = pytz.timezone('Asia/Seoul')
+    base_date = datetime.now(seoul_tz).strftime("%Y%m%d")
+    
     params = {
         'serviceKey': os.environ.get('WEATHER_KEY'),
         'dataType': 'JSON', 'base_date': base_date, 'base_time': '0500', 
@@ -44,14 +55,18 @@ def callback():
     try:
         res = requests.get(weather_url, params=params).json()
         items = res['response']['body']['items']['item']
+        
         forecasts = {}
         for item in items:
             fcst_time = item['fcstTime']
-            if fcst_time not in forecasts: forecasts[fcst_time] = {'time': fcst_time[:2] + "시"}
+            if fcst_time not in forecasts:
+                forecasts[fcst_time] = {'time': fcst_time[:2] + "시"}
+            
             category = item['category']
             value = item['fcstValue']
-            if category == 'TMP':
-                forecasts[fcst_time]['temp'] = predict_refined_temp(float(value))
+            
+            # 먼저 모든 날씨 요소를 수집합니다.
+            if category == 'TMP': forecasts[fcst_time]['raw_temp'] = value
             elif category == 'REH': forecasts[fcst_time]['humidity'] = value
             elif category == 'POP': forecasts[fcst_time]['rain_prob'] = value
             elif category == 'WSD': forecasts[fcst_time]['wind'] = value
@@ -59,13 +74,27 @@ def callback():
         weather_list = []
         for time_key in sorted(forecasts.keys()):
             f = forecasts[time_key]
-            if all(k in f for k in ['temp', 'humidity', 'rain_prob', 'wind']):
+            # 필수 데이터(기온, 습도 등)가 모두 모였을 때 예측 모델 가동
+            if all(k in f for k in ['raw_temp', 'humidity', 'rain_prob', 'wind']):
+                # --- [미녕 AI 모델 작동: 기온 + 습도 반영] ---
+                f['temp'] = predict_refined_temp(f['raw_temp'], f['humidity'])
+                
                 status, advice, color, icon = get_weather_theme(f['temp'])
                 weather_list.append({
-                    'time': f['time'], 'temp': f"{f['temp']:.1f}", 'humidity': f['humidity'],
-                    'rain_prob': f['rain_prob'], 'wind': f['wind'], 'status': status,
-                    'advice': advice, 'color': color, 'icon': icon
+                    'time': f['time'],
+                    'temp': f"{f['temp']:.1f}", # 이제 .3, .7 등 다양한 소수점이 나옵니다!
+                    'humidity': f['humidity'],
+                    'rain_prob': f['rain_prob'],
+                    'wind': f['wind'],
+                    'status': status,
+                    'advice': advice,
+                    'color': color,
+                    'icon': icon
                 })
+        
         return render_template('index.html', weather_data=weather_list)
     except Exception as e:
-        return f"분석 오류: {str(e)}"
+        return f"분석 중 오류 발생: {str(e)}"
+
+if __name__ == '__main__':
+    app.run()
